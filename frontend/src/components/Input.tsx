@@ -16,8 +16,6 @@ function Input({ className, ...props }: Props) {
 
   return (
     <input
-      type="number"
-      inputMode="numeric"
       className={cn(
         "border p-2 w-full placeholder:text-gray-300 rounded mb-4 outline-none",
         isInvalid
