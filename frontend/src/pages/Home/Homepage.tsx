@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 
 export default function Home() {
   // MOCK: dados de exemplo (substitua depois por dados reais da API)
   const today = new Date().toLocaleDateString();
   const quickActions = [
-    { label: "Novo exercício", to: "/exercises/new" },
-    { label: "Novo dia de treino", to: "/metrics/new" },
-    { label: "Nova sessão", to: "/session/new" },
+    { label: "Novo exercício", to: "/exercises" },
+    { label: "Novo dia de treino", to: "/training-days" },
+    { label: "Nova sessão", to: "/training-sessions" },
   ];
   const todaysPlan = {
     name: "Lower Body (Força)",
@@ -29,44 +31,13 @@ export default function Home() {
     { name: "Remada curvada", best: "4×8 @ 45 kg", last: "27/10/2025" },
     { name: "Desenvolvimento", best: "5×5 @ 40 kg", last: "29/10/2025" },
   ];
-  const goals = [
-    { label: "Treinos/semana", target: 4, current: 3 },
-    { label: "Volume semanal", target: 45000, current: 37200 }, // kg
-    { label: "Cardio (min)", target: 120, current: 80 },
-  ];
+
 
   return (
     <main className="w-full max-w-100vw max-h-100vh bg-white m-auto">
-      {/* Header */}
-      <section className="sticky top-0 z-10 border-b bg-white/90 backdrop-blur">
-        <div className="mx-auto max-w-7xl px-4 py-4 flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-black text-white grid place-items-center font-semibold">FT</div>
-            <h1 className="text-xl font-semibold tracking-tight">FitTrack</h1>
-          </div>
-          <div className="ml-auto w-full sm:w-96">
-            <label className="relative block">
-              <span className="sr-only">Buscar</span>
-              <span className="absolute inset-y-0 left-3 grid place-items-center">
-                {/* ícone lupa */}
-                <svg width="18" height="18" fill="none" stroke="currentColor" className="opacity-60">
-                  <circle cx="8" cy="8" r="6" strokeWidth="2" />
-                  <path d="M12 12l4 4" strokeWidth="2" />
-                </svg>
-              </span>
-              <input
-                type="search"
-                placeholder="Buscar exercícios ou treinos…"
-                className="w-full rounded-xl border px-9 py-2 outline-none focus:ring-2 focus:ring-black/30"
-              />
-            </label>
-          </div>
-        </div>
-      </section>
+      <Header />
 
-      {/* Conteúdo principal */}
       <section className="mx-auto max-w-7xl px-4 py-6">
-        {/* Boas-vindas + ações rápidas */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm text-neutral-500">Hoje • {today}</p>
@@ -85,7 +56,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Grid principal */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Coluna esquerda (2/3) */}
           <div className="lg:col-span-2 space-y-6">
@@ -103,7 +73,6 @@ export default function Home() {
                   Iniciar treino
                 </Link>
               </div>
-              <p className="mb-4 text-sm text-neutral-700">{todaysPlan.notes}</p>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="text-left text-neutral-500">
@@ -142,11 +111,10 @@ export default function Home() {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="font-medium">{s.title}</p>
-                        <p className="text-sm text-neutral-600">{s.date}</p>
+                        
                       </div>
                       <div className="text-right">
-                        <p className="text-sm">Volume: <span className="font-medium">{s.vol}</span></p>
-                        <p className="text-sm text-neutral-600">{s.duration}</p>
+                        <p className="text-sm text-neutral-600">{s.date}</p>
                       </div>
                     </div>
                   </li>
@@ -176,67 +144,13 @@ export default function Home() {
               </ul>
             </div>
 
-            {/* Metas rápidas */}
-            <div className="rounded-2xl border p-5">
-              <h3 className="mb-4 text-lg font-semibold">Metas da semana</h3>
-              <div className="space-y-4">
-                {goals.map((g) => {
-                  const pct = Math.min(100, Math.round((g.current / g.target) * 100));
-                  return (
-                    <div key={g.label}>
-                      <div className="mb-1 flex items-center justify-between text-sm">
-                        <span className="text-neutral-700">{g.label}</span>
-                        <span className="font-medium">{pct}%</span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-neutral-200">
-                        <div
-                          className="h-2 rounded-full bg-black transition-[width]"
-                          style={{ width: `${pct}%` }}
-                          aria-label={`${g.label} progresso`}
-                          role="progressbar"
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-valuenow={pct}
-                        />
-                      </div>
-                      <p className="mt-1 text-xs text-neutral-500">
-                        {g.current} / {g.target} {g.label.includes("Volume") ? "kg" : ""}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-              <Link
-                to="/goals"
-                className="mt-4 inline-block rounded-xl border px-4 py-2 text-sm font-medium hover:bg-black hover:text-white"
-              >
-                Ajustar metas
-              </Link>
-            </div>
-
-            {/* CTA */}
-            <div className="rounded-2xl border p-5">
-              <h3 className="text-lg font-semibold">Relatórios & estatísticas</h3>
-              <p className="mt-1 text-sm text-neutral-700">
-                Acompanhe evolução de carga, PRs e frequência semanal.
-              </p>
-              <Link
-                to="/stats"
-                className="mt-3 inline-block rounded-xl bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-              >
-                Ver estatísticas
-              </Link>
-            </div>
+          
+            
           </div>
         </div>
       </section>
 
-      {/* Footer simples */}
-      <section className="border-t">
-        <div className="mx-auto max-w-7xl px-4 py-6 text-sm text-neutral-500">
-          © {new Date().getFullYear()} FitTrack • <Link to="/settings" className="hover:underline">Configurações</Link>
-        </div>
-      </section>
+      <Footer />
     </main>
   );
 }

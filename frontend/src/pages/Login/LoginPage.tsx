@@ -1,4 +1,5 @@
 import Input from '../../components/Input';
+import Label from '../../components/Label';
 
 export default function Login() {
   return (
@@ -8,11 +9,11 @@ export default function Login() {
         <h2 className="text-xl font-semibold py-4 text-center">Login</h2>
         <form className="my-6 max-w-lg m-auto">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+            <Label htmlFor="email">Email</Label>
             <Input type="email" id="email" required />
           </div>
           <div className="mt-4">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Senha</label>
+            <Label htmlFor="password">Senha</Label>
             <Input type="password" id="password" required />
           </div>
           <div className="py-8">
