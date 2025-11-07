@@ -1,11 +1,13 @@
 import Input from "../../components/Input";
 import Label from "../../components/Label";
+import Footer from "../../components/Footer";
+import Header from "../../components/Header";
 import SelectBase, { type Option } from "../../components/SelectBase";
 import { useState } from "react";
 
-// listas de opções (value = canônico p/ backend; label = texto na UI)
+// (value = canônico p/ backend; label = texto na UI)
 const weightUnitOptions: Option[] = [
-  { value: "kg", label: "kg" },
+  { value: "kg", label: "Kg" },
   { value: "stack", label: "Placa" },
   { value: "bodyweight", label: "Peso corporal" },
 ];
@@ -23,10 +25,11 @@ const muscleGroupOptions: Option[] = [
 
 export default function ExercisePage() {
   const [unit, setUnit] = useState(""); // começa vazio para mostrar placeholder
-  const [muscle, setMuscle] = useState("peito"); // começa com valor padrão
+  const [muscle, setMuscle] = useState(""); // começa com valor padrão
 
   return (
     <main>
+        <Header />
       <section className="rounded-2xl w-full max-w-2xl bg-white p-12 shadow-md m-auto mt-20">
         <h1 className="text-3xl font-bold pt-8 text-center">Novo Exercício</h1>
         <h2 className="text-xl font-semibold py-4 text-center">
@@ -38,17 +41,6 @@ export default function ExercisePage() {
             <Input type="exercise-name" id="exercise-name" required />
           </div>
           <div className="mt-4">
-            <Label htmlFor="weight-unit">Unidade de Peso</Label>
-            <SelectBase
-              id="weight-unit"
-              value={unit}
-              onChange={setUnit}
-              options={weightUnitOptions}
-              placeholder="Selecione a unidade"
-              required
-            />
-          </div>
-          <div className="mt-4">
             <Label htmlFor="muscle-group">Grupo Muscular</Label>
             <SelectBase
               id="muscle-group"
@@ -56,20 +48,35 @@ export default function ExercisePage() {
               onChange={setMuscle}
               options={muscleGroupOptions}
               placeholder="Selecione o grupo muscular"
+              className={`text-gray-300 ${muscle === "" ? "text-gray-400" : "text-gray-900"}`}
               required
             />
           </div>
+          <div className="mt-4">
+            <Label htmlFor="weight-unit">Unidade de Peso</Label>
+            <SelectBase
+              id="weight-unit"
+              value={unit}
+              onChange={setUnit}
+              options={weightUnitOptions}
+              placeholder="Selecione a unidade"
+              className={`text-gray-300 ${unit === "" ? "text-gray-400" : "text-gray-900"}`}
+              required
+            />
+          </div>
+          
           <div className="py-8">
             <button
               type="submit"
               onClick={() => (window.location.href = "/home")}
               className="mt-6 w-full bg-blue-600 text-white p-2 rounded cursor-pointer"
             >
-              Entrar
+                Salvar Exercício
             </button>
           </div>
         </form>
       </section>
+        <Footer />
     </main>
   );
 }

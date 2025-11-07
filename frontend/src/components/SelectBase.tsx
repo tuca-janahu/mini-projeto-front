@@ -1,4 +1,5 @@
 import type { SelectHTMLAttributes } from "react";
+import { cn } from "../lib/utils";
 
 export type Option = { value: string; label: string };
 
@@ -15,7 +16,7 @@ export default function SelectBase({
   value,
   onChange,
   options,
-  placeholder = "Selecione…",
+  placeholder,
   className,
   ...rest
 }: Props) {
@@ -26,7 +27,7 @@ export default function SelectBase({
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`border border-gray-300 p-2 w-full placeholder:text-gray-300 rounded mb-4 outline-none ${className ?? ""}`}
+        className={cn(`border border-gray-300 p-2 w-full rounded mb-4 outline-none ${className ?? ""}`)}
         {...rest}
       >
         {value === "" && (

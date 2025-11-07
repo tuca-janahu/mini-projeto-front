@@ -34,7 +34,7 @@ export default function Home() {
 
 
   return (
-    <main className="w-full max-w-100vw max-h-100vh bg-white m-auto">
+    <main className="w-full max-w-100vw max-h-100vh m-auto">
       <Header />
 
       <section className="mx-auto max-w-7xl px-4 py-6">

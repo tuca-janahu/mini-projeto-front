@@ -5,9 +5,12 @@ import ExercisePage from "./pages/Exercise/ExercisePage";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SessionPage from "./pages/Session/SessionPage";
 import DayPage from "./pages/Day/DayPage";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function App() {
   return (
+    <>
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
@@ -18,5 +21,15 @@ export default function App() {
         <Route path="/training-sessions" element={<SessionPage />} />
       </Routes>
     </Router>
+    <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="colored"
+      />
+      </>
+
   );
 }

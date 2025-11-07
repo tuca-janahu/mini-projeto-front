@@ -1,37 +1,69 @@
 import { GiWeightLiftingUp } from "react-icons/gi";
+import { NavLink, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { FaBars, FaXmark } from "react-icons/fa6";
 
+
+function NavItem({ to, label }: { to: string; label: string }) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `px-3 py-4  text-sm font-semibold transition-all hover:bg-black/5 ${
+          isActive ? "bg-black/10" : ""
+        }`
+      }
+    >
+      {label}
+    </NavLink>
+  );
+}
 
 export default function Header() {
+
+  const [open, setOpen] = useState<boolean>(false);
+
+  const location = useLocation();
+
+  // sempre que a URL mudar, fecha o menu mobile
+  useEffect(() => {
+    if (open) setOpen(false);
+  }, [location.pathname]);
+
   return (
     <header className="sticky top-0 z-10 bg-neutral-200/90 backdrop-blur">
-      <div className="mx-auto max-w-7xl px-4 py-4 flex items-center gap-3">
+      <div className="mx-auto max-w-7xl px-4  flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <GiWeightLiftingUp />
 
           <h1 className="text-xl font-semibold tracking-tight">FitTrack</h1>
         </div>
-        <div className="ml-auto w-full sm:w-96">
-          <label className="relative block">
-            <span className="sr-only">Buscar</span>
-            <span className="absolute inset-y-0 left-3 grid place-items-center">
-              {/* ícone lupa */}
-              <svg
-                width="18"
-                height="18"
-                fill="none"
-                stroke="currentColor"
-                className="opacity-60"
-              >
-                <circle cx="8" cy="8" r="6" strokeWidth="2" />
-                <path d="M12 12l4 4" strokeWidth="2" />
-              </svg>
-            </span>
-            <input
-              type="search"
-              placeholder="Buscar exercícios ou treinos…"
-              className="w-full rounded-xl border px-9 py-2 outline-none focus:ring-2 focus:ring-black/30"
-            />
-          </label>
+        <div className="ml-auto">
+          <nav className="hidden sm:flex gap-2 justify-end">
+            <NavItem to="/home" label="Início" />
+            <NavItem to="/training-days" label="Novo Dia" />
+            <NavItem to="/exercises" label="Novo Exercício" />
+            <NavItem to="/training-sessions" label="Nova Sessão" />
+            <NavItem to="/" label="Sair" />
+          </nav>
+
+          {open ? (
+          <FaXmark className="block sm:hidden" onClick={() => setOpen(!open)} />
+        ) : (
+          <FaBars className="block sm:hidden" onClick={() => setOpen(!open)} />
+        )}
+
+        {open && (
+          <div className="absolute top-14 left-0 right-0 bg-gray-50 shadow-md">
+            <nav className="flex flex-col p-4">
+              <NavItem to="/home" label="Início" />
+            <NavItem to="/training-days" label="Novo Dia" />
+            <NavItem to="/exercises" label="Novo Exercício" />
+            <NavItem to="/training-sessions" label="Nova Sessão" />
+            <NavItem to="/" label="Sair" />
+            </nav>
+          </div>
+        )}
         </div>
       </div>
     </header>
