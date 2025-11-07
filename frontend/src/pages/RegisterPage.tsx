@@ -19,7 +19,7 @@ export default function Register() {
     try {
       await apiRegister({ name: name || undefined, email, password });
       toast.success("Conta criada com sucesso! Faça seu Login.");
-      navigate("/"); // o toast continua visível após o redirect
+      navigate("/login"); // o toast continua visível após o redirect
       
     } catch (err: Error | unknown) {
       if (err instanceof Error) {

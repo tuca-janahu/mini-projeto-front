@@ -1,15 +1,39 @@
 import { GiWeightLiftingUp } from "react-icons/gi";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { FaBars, FaXmark } from "react-icons/fa6";
+import {logout} from "../lib/api";
+import { toast } from "react-toastify";
 
 
-function NavItem({ to, label }: { to: string; label: string }) {
+function NavItem({
+  to,
+  label,
+  onClick,
+}: {
+  to: string;
+  label: string;
+  onClick?: () => void | Promise<void>;
+}) {
+  const navigate = useNavigate();
+
   return (
     <NavLink
       to={to}
+      onClick={async (e) => {
+        if (!onClick) return; // para outros itens do menu sem lógica extra
+        e.preventDefault();   // impede navegação imediata
+        try {
+          await onClick();
+          toast.success("Você saiu!");
+        } catch {
+          // opcional: toast.error("Falha ao sair");
+        } finally {
+          navigate(to, { replace: true });
+        }
+      }}
       className={({ isActive }) =>
-        `px-3 py-4  text-sm font-semibold transition-all hover:bg-black/5 ${
+        `px-3 py-4 text-sm font-semibold transition-all hover:bg-black/5 ${
           isActive ? "bg-black/10" : ""
         }`
       }
@@ -44,7 +68,7 @@ export default function Header() {
             <NavItem to="/training-days" label="Novo Dia" />
             <NavItem to="/exercises" label="Novo Exercício" />
             <NavItem to="/training-sessions" label="Nova Sessão" />
-            <NavItem to="/" label="Sair" />
+            <NavItem to="/" label="Sair" onClick={() => logout()} />
           </nav>
 
           {open ? (

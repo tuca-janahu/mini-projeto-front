@@ -7,20 +7,25 @@ import SessionPage from "./pages/Session/SessionPage";
 import DayPage from "./pages/Day/DayPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import RequireAuth from "./routes/RequireAuth";
 
 export default function App() {
   return (
     <>
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/exercises" element={<ExercisePage />} />
-        <Route path="/training-days" element={<DayPage />} />
-        <Route path="/training-sessions" element={<SessionPage />} />
+
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/exercises" element={<ExercisePage />} />
+          <Route path="/training-days" element={<DayPage />} />
+          <Route path="/training-sessions" element={<SessionPage />} />
+        </Route>
       </Routes>
     </Router>
+
     <ToastContainer
         position="top-right"
         autoClose={3000}

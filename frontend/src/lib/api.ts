@@ -84,7 +84,11 @@ export async function me() {
 }
 
 export async function logout() {
-  await http<{ ok: true }>(`/auth/logout`, { method: "POST" });
+  try {
+    await http<{ ok: true }>(`/auth/logout`, { method: "POST" });
+  } catch {
+    // ignore
+  }
   setAuthToken(null);
 }
 
@@ -127,8 +131,8 @@ export async function listExercises(params: {
 export type TrainingDayItemInput = { exerciseId: string; order: number };
 
 export async function createTrainingDay(payload: {
-  name: string; // vindo do teu formulário
-  notes?: string; // se o schema não aceitar, NÃO envia
+  name: string; // vindo do formulário
+  notes?: string; 
   items: Array<{ exerciseId: string; order: number }>;
 }) {
   const body = {
@@ -137,7 +141,6 @@ export async function createTrainingDay(payload: {
       exerciseId: it.exerciseId,
       order: it.order,
     })),
-    // notes: payload.notes,            // só inclua se o schema aceitar "notes"
   };
 
   return http<{ id: string }>(`/training-days`, {
