@@ -64,11 +64,11 @@ export default function Header() {
         </div>
         <div className="ml-auto">
           <nav className="hidden sm:flex gap-2 justify-end">
-            <NavItem to="/home" label="Início" />
-            <NavItem to="/training-days" label="Novo Dia" />
+            <NavItem to="/" label="Início" />
             <NavItem to="/exercises" label="Novo Exercício" />
+            <NavItem to="/training-days" label="Novo Dia" />
             <NavItem to="/training-sessions" label="Nova Sessão" />
-            <NavItem to="/" label="Sair" onClick={() => logout()} />
+            <NavItem to="/login" label="Sair" onClick={() => logout()} />
           </nav>
 
           {open ? (
@@ -80,11 +80,11 @@ export default function Header() {
         {open && (
           <div className="absolute top-14 left-0 right-0 bg-gray-50 shadow-md">
             <nav className="flex flex-col p-4">
-              <NavItem to="/home" label="Início" />
+              <NavItem to="/" label="Início" />
             <NavItem to="/training-days" label="Novo Dia" />
             <NavItem to="/exercises" label="Novo Exercício" />
             <NavItem to="/training-sessions" label="Nova Sessão" />
-            <NavItem to="/" label="Sair" />
+            <NavItem to="/login" label="Sair" />
             </nav>
           </div>
         )}

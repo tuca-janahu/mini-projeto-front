@@ -2,40 +2,53 @@ import Input from "../../components/Input";
 import Label from "../../components/Label";
 import Footer from "../../components/Footer";
 import Header from "../../components/Header";
-import SelectBase, { type Option } from "../../components/SelectBase";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import SelectBase from "../../components/SelectBase";
+import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { createExercise } from "../../lib/api";
+import { createExercise, listExercises, type ExerciseDto  } from "../../lib/api";
+import ExerciseCatalog, { type Exercise } from "../../components/ExerciseCatalog";
+import { muscleGroupOptions, weightUnitOptions } from "../../constants/options";
 
-// (value = canônico p/ backend; label = texto na UI)
-const weightUnitOptions: Option[] = [
-  { value: "kg", label: "Kg" },
-  { value: "stack", label: "Placa" },
-  { value: "bodyweight", label: "Peso corporal" },
-];
-
-const muscleGroupOptions: Option[] = [
-  { value: "peito", label: "Peito" },
-  { value: "costas", label: "Costas" },
-  { value: "ombros", label: "Ombros" },
-  { value: "biceps", label: "Bíceps" },
-  { value: "triceps", label: "Tríceps" },
-  { value: "pernas", label: "Pernas" },
-  { value: "gluteos", label: "Glúteos" },
-  { value: "core", label: "Core" },
-];
 
 export default function ExercisePage() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [unit, setUnit] = useState("");     // "kg" | "stack" | "bodyweight"
   const [muscle, setMuscle] = useState(""); // ex.: "peito"
   const [loading, setLoading] = useState(false);
+  const [catalog, setCatalog] = useState<Exercise[]>([]);
 
   const canSubmit = name.trim() !== "" && unit !== "" && muscle !== "" && !loading;
 
+  useEffect(() => {
+      let alive = true;
+      (async () => {
+        try {
+          setLoading(true);
+          const res = await listExercises({ limit: 50 });
+          if (!alive) return;
+  
+          // mapeia DTO do back → tipo Exercise do catálogo
+          const mapped: Exercise[] = res.items.map((e: ExerciseDto) => ({
+            id: e._id,
+            name: e.name,
+            muscleGroup: e.muscleGroup ??  "",
+          }));
+  
+          setCatalog(mapped);
+        } catch (err: Error | unknown) {
+          toast.error((err as Error)?.message ?? "Falha ao carregar exercícios");
+        } finally {
+          if (alive) setLoading(false);
+        }
+      })();
+      return () => {
+        alive = false;
+      };
+    }, []);
+    
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
@@ -48,7 +61,7 @@ export default function ExercisePage() {
         weightUnit: unit as "kg" | "stack" | "bodyweight",
       });
       toast.success("Exercício criado com sucesso!");
-      navigate("/training-days"); 
+      // navigate("/training-days"); 
     } catch (err: Error | unknown) {
       if (err instanceof Error) {
         toast.error(err.message);
@@ -63,12 +76,14 @@ export default function ExercisePage() {
   return (
     <main>
         <Header />
-      <section className="rounded-2xl w-full max-w-2xl bg-white p-12 shadow-md m-auto mt-20">
+        <div className=" grid lg:grid-cols-2 mt-10 mx-auto max-w-6xl p-4">
+      <section className="rounded-xl border-2 bg-white border-gray-300 p-4 mx-10 max-h-[80vh] ">
         <h1 className="text-3xl font-bold pt-8 text-center">Novo Exercício</h1>
         <h2 className="text-xl font-semibold py-4 text-center">
           Insira os dados do exercício abaixo
         </h2>
-        <form className="my-6 max-w-lg m-auto" onSubmit={onSubmit}>
+          
+          <form className="my-6 mx-10 " onSubmit={onSubmit}>
           <div>
             <Label htmlFor="exercise-name">Nome do Exercício</Label>
             <Input type="exercise-name" id="exercise-name" value={name}
@@ -109,7 +124,18 @@ export default function ExercisePage() {
             </button>
           </div>
         </form>
+          
+          
       </section>
+      <section className="w-full max-w-2xl">
+          <ExerciseCatalog
+              catalog={catalog}
+              onAdd={() => {}}
+              selectedIds={[]}
+              showAdd={false}
+            ></ExerciseCatalog>
+          </section>
+          </div>
         <Footer />
     </main>
   );

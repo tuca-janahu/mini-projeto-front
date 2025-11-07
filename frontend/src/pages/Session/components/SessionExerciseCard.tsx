@@ -1,6 +1,4 @@
-// src/components/training/SessionExerciseCard.tsx
 import SetTable, { type SetRow } from "./SetTable";
-
 type Option = { value: string; label: string };
 
 export default function SessionExerciseCard({
@@ -13,13 +11,13 @@ export default function SessionExerciseCard({
   onRemoveSet,
   unitDisabled = false,
 }: {
-  exerciseId: number;
+  exerciseId: string; // <- string (ObjectId)
   name: string;
   sets: SetRow[];
-  weightOptions: Option[]; 
-  onAddSet: (exerciseId: number) => void;
-  onChangeSet: (exerciseId: number, tempId: string, patch: Partial<Omit<SetRow, "tempId">>) => void;
-  onRemoveSet: (exerciseId: number, tempId: string) => void;
+  weightOptions: Option[];
+  onAddSet: (exerciseId: string) => void;
+  onChangeSet: (exerciseId: string, tempId: string, patch: Partial<Omit<SetRow, "tempId">>) => void;
+  onRemoveSet: (exerciseId: string, tempId: string) => void;
   unitDisabled?: boolean;
 }) {
   return (

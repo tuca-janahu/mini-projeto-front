@@ -80,7 +80,7 @@ export async function login(data: { email: string; password: string }) {
 }
 
 export async function me() {
-  return http<User>(`/auth/me`);
+  return http<User>(`/auth/protected`);
 }
 
 export async function logout() {
@@ -96,7 +96,7 @@ export async function logout() {
  * EXERCISES
  * ========================= */
 
-export type ExerciseDto = { _id: string; name: string; muscleGroup: string };
+export type ExerciseDto = { _id: string; name: string; muscleGroup: string, weightUnit: "kg" | "stack" | "bodyweight";  };
 
 export async function createExercise(payload: {
   name: string;
@@ -120,8 +120,8 @@ export async function listExercises(params: {
   if (params.muscle) q.set("muscle", params.muscle);
   if (params.limit) q.set("limit", String(params.limit));
   if (params.cursor) q.set("cursor", params.cursor);
-  const suf = q.toString() ? `?${q.toString()}` : "";
-  return http<{ items: ExerciseDto[]; nextCursor: string | null }>(`/exercises${suf}`);
+const suf = q.toString() ? `?${q.toString()}` : "";
+return http<{ items: ExerciseDto[]; nextCursor: string | null }>(`/exercises${suf}`);
 }
 
 /* =========================
@@ -132,7 +132,6 @@ export type TrainingDayItemInput = { exerciseId: string; order: number };
 
 export async function createTrainingDay(payload: {
   name: string; // vindo do formulário
-  notes?: string; 
   items: Array<{ exerciseId: string; order: number }>;
 }) {
   const body = {
@@ -149,17 +148,43 @@ export async function createTrainingDay(payload: {
   });
 }
 
-export async function getTrainingDays() {
-  return http<Array<{ id: string; name: string }>>(`/training-days`);
+export type TrainingDayDto = { id: string; label: string };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapDay(raw: any): TrainingDayDto {
+  return {
+    id: String(raw.id ?? raw._id),
+    label: String(raw.label ?? raw.name ?? ""),
+  };
 }
 
-export async function getTrainingDayById(id: string) {
-  return http<{
-    id: string;
-    name: string;
-    notes?: string;
-    items: { exerciseId: string; order: number }[];
-  }>(`/training-days/${id}`);
+export async function getTrainingDays(): Promise<TrainingDayDto[]> {
+  const data = await http<TrainingDayDto[]>("/training-days"); // o que seu back retorna
+  return (Array.isArray(data) ? data : []).map(mapDay);
+}
+
+export type TrainingDayDetail = {
+  id: string;
+  label: string;
+  items: { exerciseId: string; order: number }[];
+};
+
+export async function getTrainingDayById(id: string): Promise<TrainingDayDetail> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw = await http<any>(`/training-days/${encodeURIComponent(id)}`);
+  const items =
+    Array.isArray(raw.items) ? raw.items :
+    Array.isArray(raw.exercises) ? raw.exercises : [];
+
+  return {
+    id: String(raw.id ?? raw._id),
+    label: String(raw.label ?? raw.name ?? ""),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    items: items.map((it: any) => ({
+      exerciseId: String(it.exerciseId),
+      order: Number(it.order ?? 0),
+    })),
+  };
 }
 
 /* =========================
@@ -172,18 +197,40 @@ export type SessionSetInput = {
   unit: "kg" | "stack" | "bodyweight";
 };
 
-export async function createTrainingSession(payload: {
+type DraftPayload = {
   trainingDayId: string;
-  startedAt?: string | null; // ISO
-  notes?: string;
   items: Array<{
     exerciseId: string;
-    order: number;
-    sets: SessionSetInput[];
+    sets: Array<{ reps: number | null | ""; load: number | null | ""; unit: "kg"|"stack"|"bodyweight" }>;
   }>;
-}) {
-  return http<{ id: string }>(`/training-sessions`, {
+  notes?: string;
+  performedAt?: string | Date;
+};
+
+export async function createTrainingSession(draft: DraftPayload) {
+  const exercises = draft.items
+    .filter((it) => it.sets.length > 0)
+    .map((it) => ({
+      exerciseId: it.exerciseId,
+      sets: it.sets.map((s) => ({
+        reps: s.reps === "" ? null : Number(s.reps),
+        weight:
+          s.unit === "bodyweight"
+            ? null
+            : s.load === "" ? null : Number(s.load),
+      })),
+    }));
+
+  const body = {
+    trainingDayId: draft.trainingDayId,
+    performedAt: draft.performedAt ?? new Date().toISOString(),
+    exercises,
+    notes: draft.notes ?? undefined,
+  };
+
+  return http("/training-sessions", {
     method: "POST",
-    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
 }

@@ -1,132 +1,146 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import Input from "../../components/Input";
 import Label from "../../components/Label";
-import SelectBase, { type Option } from "../../components/SelectBase";
+import Input from "../../components/Input";
+import SelectBase from "../../components/SelectBase";
+import { toast } from "react-toastify";
 import SessionExerciseCard from "./components/SessionExerciseCard";
+import type { SetRow } from "./components/SetTable";
+import {
+  getTrainingDays,
+  getTrainingDayById,
+  listExercises,
+  createTrainingSession,
+  type ExerciseDto,
+  type TrainingDayDto,
+} from "../../lib/api";
+
+import { weightUnitOptions } from "../../constants/options";
 
 /* ======================== Tipos mínimos ======================== */
 type WeightUnit = "kg" | "stack" | "bodyweight";
 
-type Exercise = {
-  id: number;
+type SessionItem = {
+  exerciseId: string;
   name: string;
-  defaultUnit: WeightUnit;
-};
-
-type TrainingDay = {
-  id: number;
-  name: string;
-  items: { exerciseId: number; order: number }[];
-};
-
-type SetRow = {
-  tempId: string; // id local
-  reps: number | ""; // vazio = null no payload
-  load: number | ""; // idem
-  unit: WeightUnit; // unidade do set
-};
-
-type SessionExercise = {
-  exerciseId: number;
-  name: string;
+  muscleGroup: string;
+  order: number;
+  baseUnit: WeightUnit;
   sets: SetRow[];
 };
 
-type SessionDraft = {
-  trainingDayId: number | null;
-  notes: string;
-  startedAt: string; // ISO date-time local
-  items: SessionExercise[];
-};
-
-/* ======================== MOCKs (troque por API depois) ======================== */
-// Exercícios do catálogo (normalmente você tem isso no banco)
-const EXERCISES: Exercise[] = [
-  { id: 1, name: "Supino reto", defaultUnit: "kg" },
-  { id: 2, name: "Agachamento livre", defaultUnit: "kg" },
-  { id: 3, name: "Remada curvada", defaultUnit: "kg" },
-  { id: 4, name: "Desenvolvimento", defaultUnit: "kg" },
-  { id: 5, name: "Puxada na frente", defaultUnit: "kg" },
-];
-
-// Dias de treino já salvos (cada um lista apenas exerciseId e ordem)
-const TRAINING_DAYS: TrainingDay[] = [
-  {
-    id: 10,
-    name: "Full Body",
-    items: [
-      { exerciseId: 2, order: 0 },
-      { exerciseId: 5, order: 1 },
-      { exerciseId: 1, order: 2 },
-      { exerciseId: 3, order: 3 },
-    ],
-  },
-  {
-    id: 11,
-    name: "Upper A",
-    items: [
-      { exerciseId: 1, order: 0 },
-      { exerciseId: 4, order: 1 },
-      { exerciseId: 5, order: 2 },
-    ],
-  },
-];
-
-const WEIGHT_OPTIONS: { value: WeightUnit; label: string }[] = [
-  { value: "kg", label: "kg" },
-  { value: "stack", label: "Placa" },
-  { value: "bodyweight", label: "Peso corporal" },
-];
-
 /* ======================== Página ======================== */
 export default function SessionPage() {
-  const [days, setDays] = useState<TrainingDay[]>([]);
-  const [draft, setDraft] = useState<SessionDraft>(() => ({
-    trainingDayId: null,
-    notes: "",
-    startedAt: toLocalDateTimeInput(new Date()),
-    items: [],
-  }));
+  const [days, setDays] = useState<TrainingDayDto[]>([]);
+  const [notes, setNotes] = useState<string>("");
+  const [exIndex, setExIndex] = useState<
+    Record<
+      string,
+      { name: string; muscleGroup: string; weightUnit: WeightUnit }
+    >
+  >({});
+  const [loadingBoot, setLoadingBoot] = useState(true);
 
-  const dayOptions: Option[] = useMemo(
-    () => days.map((d) => ({ value: String(d.id), label: d.name })),
+  const [trainingDayId, setTrainingDayId] = useState<string>("");
+  const [items, setItems] = useState<SessionItem[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const dayOptions = useMemo(
+    () => days.map((d) => ({ value: d.id, label: d.label })),
     [days]
   );
 
+  useEffect(() => {
+    // Remova após validar
+    console.table(days);
+    console.table(dayOptions);
+  }, [days, dayOptions]);
+
   // Carrega lista de dias (mock → depois GET /training-days?mine=true)
   useEffect(() => {
-    setDays(TRAINING_DAYS);
+    let alive = true;
+    (async () => {
+      try {
+        setLoadingBoot(true);
+        const [daysApi, exApi] = await Promise.all([
+          getTrainingDays(),
+          listExercises({ limit: 500 }), // índice local p/ nome/grupo
+        ]);
+
+        if (!alive) return;
+
+        const idx: Record<
+          string,
+          {
+            name: string;
+            muscleGroup: string;
+            weightUnit: ExerciseDto["weightUnit"];
+          }
+        > = {};
+        (exApi.items as ExerciseDto[]).forEach((e) => {
+          idx[e._id] = {
+            name: e.name,
+            muscleGroup: e.muscleGroup ?? "",
+            weightUnit: e.weightUnit ?? "kg", // fallback seguro
+          };
+        });
+
+        setDays(daysApi);
+        setExIndex(idx);
+      } catch (err: Error | unknown) {
+        toast.error(
+          (err as Error)?.message ?? "Falha ao carregar dados iniciais"
+        );
+      } finally {
+        if (alive) setLoadingBoot(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  // Quando muda o dia selecionado, carregamos seus exercícios
+  /* ===== 3) ao escolher um dia, monta os exercícios da sessão (sem sets) ===== */
   useEffect(() => {
-    if (!draft.trainingDayId) return;
-    const day = days.find((d) => d.id === draft.trainingDayId);
-    if (!day) return;
+    let alive = true;
+    if (!trainingDayId) {
+      setItems([]);
+      return;
+    }
+    (async () => {
+      try {
+        const day = await getTrainingDayById(trainingDayId);
+        if (!alive) return;
 
-    // Monta a lista de exercícios da sessão com 0 sets inicialmente
-    const items: SessionExercise[] = day.items
-      .sort((a, b) => a.order - b.order)
-      .map(({ exerciseId }) => {
-        const ex = EXERCISES.find((e) => e.id === exerciseId);
-        return {
-          exerciseId,
-          name: ex?.name ?? `Exercício ${exerciseId}`,
-          sets: [], // começa vazio; usuário vai adicionar
-        };
-      });
+        // Enriquecemos com nome/muscleGroup a partir do índice local
+        const mapped: SessionItem[] = day.items
+          .sort((a, b) => a.order - b.order)
+          .map((it) => ({
+            exerciseId: it.exerciseId,
+            name: exIndex[it.exerciseId]?.name ?? "Exercício",
+            muscleGroup: exIndex[it.exerciseId]?.muscleGroup ?? "",
+            order: it.order,
+            baseUnit: exIndex[it.exerciseId]?.weightUnit ?? "kg",
+            sets: [], // o usuário vai adicionar
+          }));
 
-    setDraft((d) => ({ ...d, items }));
-  }, [draft.trainingDayId, days]);
+        setItems(mapped);
+      } catch (err: Error | unknown) {
+        toast.error(
+          (err as Error)?.message ?? "Falha ao carregar exercícios do dia"
+        );
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [trainingDayId, exIndex]);
 
-  function addSet(exerciseId: number) {
-    const ex = EXERCISES.find((e) => e.id === exerciseId);
-    const fallbackUnit: WeightUnit = ex?.defaultUnit ?? "kg";
-    setDraft((d) => ({
-      ...d,
-      items: d.items.map((it) =>
+  /* ===== 4) helpers de sets ===== */
+  function addSet(exerciseId: string) {
+    setItems((arr) =>
+      arr.map((it) =>
         it.exerciseId === exerciseId
           ? {
               ...it,
@@ -136,34 +150,22 @@ export default function SessionPage() {
                   tempId: crypto.randomUUID(),
                   reps: "",
                   load: "",
-                  unit: fallbackUnit,
+                  unit: it.baseUnit,
                 },
               ],
             }
           : it
-      ),
-    }));
-  }
-
-  function removeSet(exerciseId: number, tempId: string) {
-    setDraft((d) => ({
-      ...d,
-      items: d.items.map((it) =>
-        it.exerciseId === exerciseId
-          ? { ...it, sets: it.sets.filter((s) => s.tempId !== tempId) }
-          : it
-      ),
-    }));
+      )
+    );
   }
 
   function updateSet(
-    exerciseId: number,
+    exerciseId: string,
     tempId: string,
     patch: Partial<Omit<SetRow, "tempId">>
   ) {
-    setDraft((d) => ({
-      ...d,
-      items: d.items.map((it) =>
+    setItems((arr) =>
+      arr.map((it) =>
         it.exerciseId === exerciseId
           ? {
               ...it,
@@ -172,172 +174,128 @@ export default function SessionPage() {
               ),
             }
           : it
-      ),
-    }));
+      )
+    );
   }
 
-  // payload para POST /training-sessions
-  function buildPayload() {
-    return {
-      trainingDayId: draft.trainingDayId,
-      startedAt: toISOFromLocalInput(draft.startedAt), // opcional
-      notes: draft.notes,
-      items: draft.items.map((it, order) => ({
-        exerciseId: it.exerciseId,
-        order,
-        sets: it.sets.map((s) => ({
-          reps: s.reps === "" ? null : Number(s.reps),
-          load: s.load === "" ? null : Number(s.load),
-          unit: s.unit,
-        })),
-      })),
-    };
+  function removeSet(exerciseId: string, tempId: string) {
+    setItems((arr) =>
+      arr.map((it) =>
+        it.exerciseId === exerciseId
+          ? { ...it, sets: it.sets.filter((s) => s.tempId !== tempId) }
+          : it
+      )
+    );
   }
 
+  const canSave = useMemo(
+    () => trainingDayId !== "" && items.some((it) => it.sets.length > 0),
+    [trainingDayId, items]
+  );
+
+  /* ===== 5) salvar sessão ===== */
   async function handleSave() {
-    const payload = buildPayload();
-    console.log("payload pronto para POST /training-sessions:", payload);
+    if (!canSave) return;
+    try {
+      setSaving(true);
 
-    // Depois, troque por:
-    // await api.post("/training-sessions", payload);
-    // navigate(`/training-sessions/${res.data.id}`);
+      // Mapeia para o payload que o backend espera
+      const payload = {
+        trainingDayId,
+        items: items.map((it, order) => ({
+          exerciseId: it.exerciseId,
+          order, // mantém a ordem visível
+          sets: it.sets.map((s) => ({
+            reps: s.reps === "" ? null : Number(s.reps),
+            load: s.load === "" ? null : Number(s.load),
+            unit: s.unit,
+          })),
+        })),
+      };
+
+      await createTrainingSession(payload);
+      toast.success("Sessão salva com sucesso!");
+      // navigate("/training-sessions")
+    } catch (err: Error | unknown) {
+      toast.error((err as Error)?.message ?? "Falha ao salvar sessão");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  const canSave =
-    !!draft.trainingDayId &&
-    draft.items.length > 0 &&
-    draft.items.every((it) => it.sets.length > 0); // exige ao menos 1 set por exercício
-
-  // Para exibir o nome do dia no topo
-  const currentDayName = useMemo(() => {
-    const d = days.find((x) => x.id === draft.trainingDayId);
-    return d?.name ?? "";
-  }, [draft.trainingDayId, days]);
+  /* ===== 6) UI ===== */
+  if (loadingBoot) {
+    return (
+      <div className="p-6 text-sm m-auto text-neutral-500">Carregando…</div>
+    );
+  }
 
   return (
     <main>
       <Header />
-      <div className="mx-auto max-w-6xl p-4 min-h-[80vh]">
-        <h1 className="text-2xl font-semibold my-6">Nova Training Session</h1>
+      <div className="mx-auto max-w-6xl p-4">
+        <h1 className="text-2xl font-semibold mb-4">Nova sessão de treino</h1>
 
         <div className="grid gap-3 sm:grid-cols-3 mb-6">
-          <div className="space-y-1">
+          <div className="space-y-1 sm:col-span-1">
             <label htmlFor="training-day" className="text-sm font-medium">
               Dia de treino
             </label>
-
             <SelectBase
               id="training-day"
-              value={
-                draft.trainingDayId == null ? "" : String(draft.trainingDayId)
-              }
-              onChange={(v) =>
-                setDraft((d) => ({
-                  ...d,
-                  trainingDayId: v === "" ? null : Number(v),
-                }))
-              }
-              options={dayOptions}
+              value={trainingDayId}
+              onChange={setTrainingDayId}
               placeholder="Selecione o dia"
-              className={`w-full ${
-                draft.trainingDayId == null ? "text-gray-400" : "text-gray-900"
-              }`}
+              options={dayOptions}
+              required
             />
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="startedAt" className="text-sm font-medium">
-              Início
-            </Label>
-            <Input
-              id="startedAt"
-              type="datetime-local"
-              value={draft.startedAt}
-              onChange={(e) =>
-                setDraft((d) => ({ ...d, startedAt: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className="space-y-1 sm:col-span-1">
-            <Label htmlFor="notes" className="text-sm font-medium">
-              Notas
-            </Label>
-            <Input
-              id="notes"
-              type="text"
-              placeholder="Sensação do treino, dores, etc."
-              value={draft.notes}
-              onChange={(e) =>
-                setDraft((d) => ({ ...d, notes: e.target.value }))
-              }
-              
-            />
-          </div>
+</div>
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="notes">Notas</Label>
+              <Input
+                id="notes"
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Observações gerais (aquecimento, técnica, etc.)"
+              />
+            </div>
+          
         </div>
 
-        {/* Exercícios do dia selecionado */}
-        {draft.trainingDayId && (
-          <section className="rounded-2xl border p-4">
-            <h2 className="text-lg font-semibold mb-3">
-              Exercícios —{" "}
-              <span className="text-neutral-600">{currentDayName}</span>
-            </h2>
-
-            {draft.items.length === 0 ? (
-              <p className="text-sm text-neutral-500">
-                Este dia não tem exercícios.
-              </p>
-            ) : (
-              <ul className="space-y-4">
-                {draft.items.map((it) => (
-                  <SessionExerciseCard
-                    key={it.exerciseId}
-                    exerciseId={it.exerciseId}
-                    name={it.name}
-                    sets={it.sets}
-                    weightOptions={WEIGHT_OPTIONS}
-                    unitDisabled
-                    onAddSet={addSet}
-                    onChangeSet={updateSet}
-                    onRemoveSet={removeSet}
-                  />
-                ))}
-              </ul>
-            )}
-
-            <div className="mt-4 flex items-center justify-end">
-              <button
-                onClick={handleSave}
-                className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-                disabled={!canSave}
-              >
-                Salvar sessão
-              </button>
-            </div>
-          </section>
+        {items.length === 0 ? (
+          <p className="text-sm text-neutral-500">
+            Nenhum exercício carregado para este dia.
+          </p>
+        ) : (
+          <ul className="space-y-4">
+            {items.map((it) => (
+              <SessionExerciseCard
+                key={it.exerciseId}
+                exerciseId={it.exerciseId}
+                name={it.name}
+                sets={it.sets}
+                weightOptions={weightUnitOptions}
+                onAddSet={addSet}
+                onChangeSet={updateSet}
+                onRemoveSet={removeSet}
+                unitDisabled={true}
+              />
+            ))}
+          </ul>
         )}
+
+        <div className="mt-6">
+          <button
+            onClick={handleSave}
+            disabled={!canSave || saving}
+            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {saving ? "Salvando..." : "Salvar sessão"}
+          </button>
+        </div>
       </div>
       <Footer />
     </main>
   );
-}
-
-/* ======================== Helpers de data/hora ======================== */
-// datetime-local quer "YYYY-MM-DDTHH:mm"
-function toLocalDateTimeInput(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`;
-}
-
-// Converte "YYYY-MM-DDTHH:mm" (sem timezone) para ISO assumindo localtime
-function toISOFromLocalInput(s: string) {
-  if (!s) return null;
-  const [date, time] = s.split("T");
-  const [y, m, d] = date.split("-").map(Number);
-  const [hh, mm] = time.split(":").map(Number);
-  const asLocal = new Date(y, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0, 0);
-  return asLocal.toISOString();
 }

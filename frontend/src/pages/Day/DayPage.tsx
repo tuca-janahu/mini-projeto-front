@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Input from "../../components/Input";
-import ExerciseCatalog, { type Exercise } from "./components/ExerciseCatalog";
+import ExerciseCatalog, { type Exercise } from "../../components/ExerciseCatalog";
 import Label from "../../components/Label";
 import { createTrainingDay, listExercises, type ExerciseDto } from "../../lib/api";
 import { toast } from "react-toastify";
@@ -17,7 +17,6 @@ type DayItem = {
 export default function DayPage() {
   // form (nome do dia e notas)
   const [name, setName] = useState<string>("Full Body");
-  const [notes, setNotes] = useState<string>("");
 
   // catálogo vindo do backend
   const [catalog, setCatalog] = useState<Exercise[]>([]);
@@ -112,7 +111,6 @@ export default function DayPage() {
   async function handleSave() {
     const payload = {
       name,
-      notes,
       items: items.map((it, order) => ({ exerciseId: it.exerciseId, order })),
     };
 
@@ -145,16 +143,7 @@ export default function DayPage() {
               placeholder="ex.: Full Body A"
             />
           </div>
-          <div className="space-y-1 sm:col-span-2">
-            <Label htmlFor="notes">Notas</Label>
-            <Input
-              id="notes"
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Observações gerais (aquecimento, técnica, etc.)"
-            />
-          </div>
+          
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2 min-h-110">

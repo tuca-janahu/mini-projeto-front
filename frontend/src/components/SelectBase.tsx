@@ -20,6 +20,10 @@ export default function SelectBase({
   className,
   ...rest
 }: Props) {
+  const sane = options.filter(
+    (o): o is Option => !!o && typeof o.value === "string" && typeof o.label === "string"
+  );
+
   return (
     <div className="space-y-2">
      
@@ -27,20 +31,20 @@ export default function SelectBase({
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={cn(`border border-gray-300 p-2 w-full rounded mb-4 outline-none ${className ?? ""}`)}
+        className={cn(`border border-gray-300 p-2 w-full bg-white rounded mb-4 outline-none ${className ?? ""}`)}
         {...rest}
       >
-        {value === "" && (
-          <option value="" disabled>
-            {placeholder}
-          </option>
-        )}
+        {placeholder && (
+        <option key="__ph__" value="" disabled hidden>
+          {placeholder}
+        </option>
+      )}
 
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
+        {sane.map((o, idx) => (
+        <option key={`${o.value}-${idx}`} value={o.value}>
+          {o.label}
+        </option>
+      ))}
       </select>
     </div>
   );

@@ -1,9 +1,17 @@
 import { Link } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import ExerciseCatalog, { type Exercise } from "../../components/ExerciseCatalog";
+import { listExercises, type ExerciseDto } from "../../lib/api";
+import { toast } from "react-toastify";
+import { useEffect, useState } from "react";
+
 
 export default function Home() {
-  // MOCK: dados de exemplo (substitua depois por dados reais da API)
+  const [catalog, setCatalog] = useState<Exercise[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const today = new Date().toLocaleDateString();
   const quickActions = [
     { label: "Novo exercício", to: "/exercises" },
@@ -25,12 +33,55 @@ export default function Home() {
     { id: 2, date: "28/10/2025", title: "Cardio + Core", vol: "—", duration: "40 min" },
     { id: 3, date: "27/10/2025", title: "Upper (Puxar)", vol: "10.2k kg", duration: "54 min" },
   ];
-  const topExercises = [
-    { name: "Supino reto", best: "5×5 @ 70 kg", last: "30/10/2025" },
-    { name: "Agachamento", best: "5×5 @ 85 kg", last: "27/10/2025" },
-    { name: "Remada curvada", best: "4×8 @ 45 kg", last: "27/10/2025" },
-    { name: "Desenvolvimento", best: "5×5 @ 40 kg", last: "29/10/2025" },
-  ];
+ 
+    useEffect(() => {
+      let alive = true;
+      (async () => {
+        try {
+          setLoading(true);
+          const res = await listExercises({ limit: 50 });
+          if (!alive) return;
+  
+          // mapeia DTO do back → tipo Exercise do catálogo
+          const mapped: Exercise[] = res.items.map((e: ExerciseDto) => ({
+            id: e._id,
+            name: e.name,
+            muscleGroup: e.muscleGroup ??  "",
+          }));
+  
+          setCatalog(mapped);
+          setNextCursor(res.nextCursor);
+        } catch (err: Error | unknown) {
+          toast.error((err as Error)?.message ?? "Falha ao carregar exercícios");
+        } finally {
+          if (alive) setLoading(false);
+        }
+      })();
+      return () => {
+        alive = false;
+      };
+    }, []);
+  
+    async function loadMore() {
+      if (!nextCursor || loading) return;
+      try {
+        setLoading(true);
+        const res = await listExercises({ limit: 50, cursor: nextCursor });
+        const mapped: Exercise[] = res.items.map((e: ExerciseDto) => ({
+          id: e._id,
+          name: e.name,
+          muscleGroup: e.muscleGroup ?? "",
+        }));
+        setCatalog((curr) => [...curr, ...mapped]);
+        setNextCursor(res.nextCursor);
+      } catch (err: Error | unknown) {
+        toast.error(
+          (err as Error)?.message ?? "Falha ao carregar mais exercícios"
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
 
 
   return (
@@ -126,23 +177,25 @@ export default function Home() {
           {/* Coluna direita (1/3) */}
           <div className="space-y-6">
             {/* Exercícios em destaque */}
-            <div className="rounded-2xl border p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Exercícios</h3>
-                <Link to="/exercises" className="text-sm font-medium text-neutral-700 hover:underline">
-                  Gerenciar
-                </Link>
-              </div>
-              <ul className="space-y-3">
-                {topExercises.map((e) => (
-                  <li key={e.name} className="rounded-xl border p-3">
-                    <p className="font-medium">{e.name}</p>
-                    <p className="text-sm text-neutral-700">PR: {e.best}</p>
-                    <p className="text-xs text-neutral-500">Último: {e.last}</p>
-                  </li>
-                ))}
-              </ul>
+            <ExerciseCatalog
+            catalog={catalog}
+            selectedIds={[]}       // não precisa seleção aqui
+            showAdd={false}        // deixa o catálogo só de leitura
+          />
+          {loading && <p className="text-sm text-neutral-500 mt-2">Carregando…</p>}
+          {nextCursor && !loading && (
+            <div className="mt-3">
+              <button
+                onClick={loadMore}
+                className="rounded-md border px-3 py-1.5 text-sm hover:bg-neutral-50"
+              >
+                Carregar mais
+              </button>
             </div>
+          )}
+          {catalog.length === 0 && !loading && (
+            <p className="text-sm text-neutral-500">Você ainda não criou exercícios.</p>
+          )}
 
           
             

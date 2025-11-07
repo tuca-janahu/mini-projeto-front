@@ -16,7 +16,7 @@ export default function Login() {
   try {
     await apiLogin({ email, password });
     toast.success("Login realizado!");
-    navigate("/home"); // ou para o dashboard
+    navigate("/");
   } catch (err: Error | unknown) {
     if (err instanceof Error) {
       toast.error(err.message);

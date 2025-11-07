@@ -1,30 +1,21 @@
 import { useMemo, useState } from "react";
-import SelectBase, { type Option } from "../../../components/SelectBase";
-import Input from "../../../components/Input";
-
+import SelectBase from "./SelectBase";
+import Input from "./Input";
+import { muscleGroupOptions } from "../constants/options";
 //tipo mais simples pra essa página
 export type Exercise = { id: string; name: string; muscleGroup: string };
-
-const muscleGroupOptions: Option[] = [
-  { value: "", label: "Todos os grupos" },
-  { value: "peito", label: "Peito" },
-  { value: "costas", label: "Costas" },
-  { value: "ombros", label: "Ombros" },
-  { value: "biceps", label: "Bíceps" },
-  { value: "triceps", label: "Tríceps" },
-  { value: "pernas", label: "Pernas" },
-  { value: "gluteos", label: "Glúteos" },
-  { value: "core", label: "Core" },
-];
 
 export default function ExerciseCatalog({
   catalog,
   onAdd,
   selectedIds = [],
+  showAdd = true,
 }: {
   catalog: Exercise[];
-  onAdd: (ex: Exercise) => void;
+  onAdd?: (ex: Exercise) => void;
   selectedIds?: string[];
+  showAdd?: boolean;
+
 }) {
   const [query, setQuery] = useState("");
   const [muscle, setMuscle] = useState("");
@@ -70,6 +61,7 @@ export default function ExerciseCatalog({
                 <p className="font-medium">{ex.name}</p>
                 <p className="text-xs text-neutral-500">{ex.muscleGroup}</p>
               </div>
+              {showAdd && onAdd && (
               <button
                 onClick={() => onAdd(ex)}
                 disabled={already}
@@ -81,6 +73,7 @@ export default function ExerciseCatalog({
               >
                 {already ? "Adicionado" : "Adicionar"}
               </button>
+              )}
             </li>
           );
         })}
