@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import SelectBase, { type Option } from "../../../components/SelectBase";
 import Input from "../../../components/Input";
 
-export type Exercise = { id: number; name: string; muscle: string };
+//tipo mais simples pra essa página
+export type Exercise = { id: string; name: string; muscleGroup: string };
 
 const muscleGroupOptions: Option[] = [
   { value: "", label: "Todos os grupos" },
@@ -23,7 +24,7 @@ export default function ExerciseCatalog({
 }: {
   catalog: Exercise[];
   onAdd: (ex: Exercise) => void;
-  selectedIds?: number[];
+  selectedIds?: string[];
 }) {
   const [query, setQuery] = useState("");
   const [muscle, setMuscle] = useState("");
@@ -32,7 +33,7 @@ export default function ExerciseCatalog({
     const q = query.trim().toLowerCase();
     return catalog.filter((e) => {
       const okQ = q === "" || e.name.toLowerCase().includes(q);
-      const okG = muscle === "" || e.muscle === muscle;
+      const okG = muscle === "" || e.muscleGroup === muscle;
       return okQ && okG;
     });
   }, [catalog, query, muscle]);
@@ -67,7 +68,7 @@ export default function ExerciseCatalog({
             <li key={ex.id} className="py-3 flex items-center justify-between">
               <div>
                 <p className="font-medium">{ex.name}</p>
-                <p className="text-xs text-neutral-500">{ex.muscle}</p>
+                <p className="text-xs text-neutral-500">{ex.muscleGroup}</p>
               </div>
               <button
                 onClick={() => onAdd(ex)}

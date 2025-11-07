@@ -35,15 +35,16 @@ async function http<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   // Trata erros de forma simples e útil
   if (!res.ok) {
-    let detail = "";
-    try {
-      const body = await res.json();
-      detail = body?.error || JSON.stringify(body);
-    } catch {
-      detail = await res.text().catch(() => "");
-    }
-    throw new Error(`HTTP ${res.status}${detail ? ` - ${detail}` : ""}`);
+  let detail = "";
+  try {
+    const body = await res.json();
+    // zod.flatten vem em body.error; serialize pra ver campos inválidos
+    detail = body?.error ? JSON.stringify(body.error) : JSON.stringify(body);
+  } catch {
+    detail = await res.text().catch(() => "");
   }
+  throw new Error(`HTTP ${res.status} - ${detail}`);
+}
 
   // Algumas rotas 204 não têm body
   if (res.status === 204) return undefined as unknown as T;
@@ -91,7 +92,18 @@ export async function logout() {
  * EXERCISES
  * ========================= */
 
-export type ExerciseDto = { _id: string; name: string; muscle: string };
+export type ExerciseDto = { _id: string; name: string; muscleGroup: string };
+
+export async function createExercise(payload: {
+  name: string;
+  muscleGroup: string;             // ex.: "peito"
+  weightUnit: "kg" | "stack" | "bodyweight";
+}) {
+  return http<{ id: string }>(`/exercises`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
 
 export async function listExercises(params: {
   search?: string;
@@ -115,13 +127,22 @@ export async function listExercises(params: {
 export type TrainingDayItemInput = { exerciseId: string; order: number };
 
 export async function createTrainingDay(payload: {
-  name: string;
-  notes?: string;
-  items: TrainingDayItemInput[];
+  name: string; // vindo do teu formulário
+  notes?: string; // se o schema não aceitar, NÃO envia
+  items: Array<{ exerciseId: string; order: number }>;
 }) {
+  const body = {
+    label: payload.name,                // <- controller usa "label"
+    exercises: payload.items.map((it) => ({
+      exerciseId: it.exerciseId,
+      order: it.order,
+    })),
+    // notes: payload.notes,            // só inclua se o schema aceitar "notes"
+  };
+
   return http<{ id: string }>(`/training-days`, {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
 }
 
