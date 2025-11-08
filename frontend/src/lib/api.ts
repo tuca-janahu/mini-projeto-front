@@ -176,6 +176,7 @@ export async function getTrainingDayById(id: string): Promise<TrainingDayDetail>
     Array.isArray(raw.items) ? raw.items :
     Array.isArray(raw.exercises) ? raw.exercises : [];
 
+    
   return {
     id: String(raw.id ?? raw._id),
     label: String(raw.label ?? raw.name ?? ""),
@@ -187,6 +188,30 @@ export async function getTrainingDayById(id: string): Promise<TrainingDayDetail>
   };
 }
 
+const dayNameCache = new Map<string, string>();
+export async function getTrainingDayName(id: string): Promise<string> {
+  const hit = dayNameCache.get(id);
+  if (hit) return hit;
+  const day = await getTrainingDayById(id);
+  dayNameCache.set(id, day.label);
+  return day.label;
+}
+
+export type TrainingDayLite = { id: string; label: string;  exercises?: { name?: string }[] };
+
+export async function listMyTrainingDays() {
+  // ajuste a rota (se usar ?mine=true ou já filtra por token)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return http<any[]>(`/training-days`).then((arr) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (Array.isArray(arr) ? arr : []).map((d: any) => ({
+      id: String(d.id ?? d._id),
+      label: String(d.label ?? d.name ?? "Meu dia"),
+      notes: d.notes ?? "",
+      exercises: d.exercises ?? d.items ?? [],
+    })) as TrainingDayLite[]
+  );
+}
 /* =========================
  * TRAINING SESSIONS
  * ========================= */
@@ -205,6 +230,25 @@ type DraftPayload = {
   }>;
   notes?: string;
   performedAt?: string | Date;
+};
+
+type ListSessionsFilters = {
+  trainingDayId?: string;
+  exerciseId?: string;
+  from?: string; // ISO (ex.: "2025-11-01") ou "2025-11-01T00:00:00Z"
+  to?: string;   // ISO
+  page?: number;
+  limit?: number; // máx 100 (controller força)
+  sort?: "asc" | "desc";
+};
+
+export type TrainingSessionLite = {
+  id: string;
+  trainingDayId: string;
+  performedAt: string; // ISO
+  title?: string;
+  volume?: number;
+  durationMin?: number;
 };
 
 export async function createTrainingSession(draft: DraftPayload) {
@@ -233,4 +277,32 @@ export async function createTrainingSession(draft: DraftPayload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+}
+
+export async function listTrainingSessions(filters: ListSessionsFilters = {}) {
+  const qs = new URLSearchParams();
+  if (filters.trainingDayId) qs.set("trainingDayId", filters.trainingDayId);
+  if (filters.exerciseId) qs.set("exerciseId", filters.exerciseId);
+  if (filters.from) qs.set("from", filters.from);
+  if (filters.to) qs.set("to", filters.to);
+  if (filters.page) qs.set("page", String(filters.page));
+  if (filters.limit) qs.set("limit", String(filters.limit));
+  if (filters.sort) qs.set("sort", filters.sort);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = await http<{ items: any[]; total: number; page: number; limit: number }>(
+    `/training-sessions?${qs.toString()}`
+  );
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const items: TrainingSessionLite[] = (data.items ?? []).map((s: any) => ({
+    id: String(s.id ?? s._id),
+    trainingDayId: String(s.trainingDayId),
+    performedAt: s.performedAt ?? s.createdAt ?? new Date(),
+    title: s.title ?? s.dayName ?? s.label ?? "Sessão",
+    volume: typeof s.volume === "number" ? s.volume : undefined,
+    durationMin: typeof s.durationMin === "number" ? s.durationMin : undefined,
+  }));
+
+  return { items, total: data.total ?? items.length, page: data.page ?? 1, limit: data.limit ?? items.length };
 }
