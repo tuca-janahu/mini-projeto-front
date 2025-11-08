@@ -1,8 +1,7 @@
 import Label from "../../../components/Label";
 import Input from "../../../components/Input";
 import SelectBase, { type Option } from "../../../components/SelectBase";
-
-export type WeightUnit = "kg" | "stack" | "bodyweight";
+import type { WeightUnit } from "../../../types/exercise";
 
 export type SetRow = {
   tempId: string;

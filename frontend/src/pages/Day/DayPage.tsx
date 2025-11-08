@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Input from "../../components/Input";
-import ExerciseCatalog, { type Exercise } from "../../components/ExerciseCatalog";
+import ExerciseCatalog from "../../components/ExerciseCatalog";
 import Label from "../../components/Label";
-import { createTrainingDay, listExercises, type ExerciseDto } from "../../lib/api";
+import { createTrainingDay, listExercises } from "../../lib/api";
 import { toast } from "react-toastify";
+import type { Exercise } from "../../types/exercise";
 
 type DayItem = {
   tempId: string;
@@ -68,13 +69,8 @@ export default function DayPage() {
         if (!alive) return;
 
         // mapeia DTO do back → tipo Exercise do catálogo
-        const mapped: Exercise[] = res.items.map((e: ExerciseDto) => ({
-          id: e._id,
-          name: e.name,
-          muscleGroup: e.muscleGroup ??  "",
-        }));
-
-        setCatalog(mapped);
+        
+        setCatalog(res.items);
         setNextCursor(res.nextCursor);
       } catch (err: Error | unknown) {
         toast.error((err as Error)?.message ?? "Falha ao carregar exercícios");
@@ -92,12 +88,8 @@ export default function DayPage() {
     try {
       setLoading(true);
       const res = await listExercises({ limit: 50, cursor: nextCursor });
-      const mapped: Exercise[] = res.items.map((e: ExerciseDto) => ({
-        id: e._id,
-        name: e.name,
-        muscleGroup: e.muscleGroup ?? "",
-      }));
-      setCatalog((curr) => [...curr, ...mapped]);
+      
+      setCatalog((curr) => [...curr, ...res.items]);
       setNextCursor(res.nextCursor);
     } catch (err: Error | unknown) {
       toast.error(

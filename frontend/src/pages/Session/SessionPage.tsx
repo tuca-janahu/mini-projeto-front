@@ -12,10 +12,9 @@ import {
   getTrainingDayById,
   listExercises,
   createTrainingSession,
-  type ExerciseDto,
   type TrainingDayDto,
 } from "../../lib/api";
-
+import type { Exercise } from "../../types/exercise";
 import { weightUnitOptions } from "../../constants/options";
 
 /* ======================== Tipos mínimos ======================== */
@@ -75,11 +74,11 @@ export default function SessionPage() {
           {
             name: string;
             muscleGroup: string;
-            weightUnit: ExerciseDto["weightUnit"];
+            weightUnit: Exercise["weightUnit"];
           }
         > = {};
-        (exApi.items as ExerciseDto[]).forEach((e) => {
-          idx[e._id] = {
+        (exApi.items as Exercise[]).forEach((e) => {
+          idx[e.id] = {
             name: e.name,
             muscleGroup: e.muscleGroup ?? "",
             weightUnit: e.weightUnit ?? "kg", // fallback seguro

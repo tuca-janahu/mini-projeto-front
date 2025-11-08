@@ -1,9 +1,7 @@
 
-// src/lib/api.ts
-// Uso: defina no .env do front -> VITE_API_URL=https://registros-treinos.tucajanahu.app
-// Em dev local: VITE_API_URL=http://localhost:3000
+// Vercel: VITE_API_URL=https://registros-treinos.tucajanahu.app
+// local: VITE_API_URL=http://localhost:3000
 
-/** Base da API (sem /api, já que suas rotas não usam esse prefixo no Vercel) */
 export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 /** Armazenamento simples do token (caso seu back retorne no corpo). */
@@ -95,18 +93,32 @@ export async function logout() {
 /* =========================
  * EXERCISES
  * ========================= */
+import type { Exercise, ExerciseCreate, ExerciseUpdate, WeightUnit } from "../types/exercise";
 
-export type ExerciseDto = { _id: string; name: string; muscleGroup: string, weightUnit: "kg" | "stack" | "bodyweight";  };
-
-export async function createExercise(payload: {
+type ExerciseDTO = {
+  _id?: string;
+  id?: string;
   name: string;
-  muscleGroup: string;             // ex.: "peito"
-  weightUnit: "kg" | "stack" | "bodyweight";
-}) {
-  return http<{ id: string }>(`/exercises`, {
+  muscleGroup?: string | null;
+  weightUnit?: WeightUnit | null;
+};
+
+function fromDto(d: ExerciseDTO): Exercise {
+  return {
+    id: String(d.id ?? d._id),
+    name: d.name,
+    muscleGroup: d.muscleGroup ?? "",
+    weightUnit: (d.weightUnit ?? "kg") as WeightUnit,
+  };
+}
+
+export async function createExercise(input: ExerciseCreate): Promise<Exercise> {
+  const res = await http<ExerciseDTO>("/exercises", {
     method: "POST",
-    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
   });
+  return fromDto(res);
 }
 
 export async function listExercises(params: {
@@ -120,10 +132,35 @@ export async function listExercises(params: {
   if (params.muscle) q.set("muscle", params.muscle);
   if (params.limit) q.set("limit", String(params.limit));
   if (params.cursor) q.set("cursor", params.cursor);
-const suf = q.toString() ? `?${q.toString()}` : "";
-return http<{ items: ExerciseDto[]; nextCursor: string | null }>(`/exercises${suf}`);
+
+  const suf = q.toString() ? `?${q.toString()}` : "";
+
+  // Chama o back, mas normaliza antes de devolver:
+  const res = await http<{ items: ExerciseDTO[]; nextCursor?: string | null }>(`/exercises${suf}`);
+
+  return {
+    items: res.items.map(fromDto),          // <- já em Exercise[]
+    nextCursor: res.nextCursor ?? null,
+  };
 }
 
+export async function updateExercise(id: string, patch: ExerciseUpdate): Promise<Exercise> {
+  const res = await http<ExerciseDTO>(`/exercises/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  return fromDto(res);
+}
+
+export async function getExercise(id: string): Promise<Exercise> {
+  const res = await http<ExerciseDTO>(`/exercises/${id}`, { method: "GET" });
+  return fromDto(res);
+}
+
+export async function deleteExercise(id: string): Promise<void> {
+  await http<void>(`/exercises/${id}`, { method: "DELETE" });
+}
 /* =========================
  * TRAINING DAYS
  * ========================= */

@@ -6,9 +6,10 @@ import SelectBase from "../../components/SelectBase";
 import { useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { createExercise, listExercises, type ExerciseDto  } from "../../lib/api";
-import ExerciseCatalog, { type Exercise } from "../../components/ExerciseCatalog";
+import { createExercise, listExercises } from "../../lib/api";
+import ExerciseCatalog from "../../components/ExerciseCatalog";
 import { muscleGroupOptions, weightUnitOptions } from "../../constants/options";
+import type { Exercise } from "../../types/exercise";
 
 
 export default function ExercisePage() {
@@ -28,16 +29,9 @@ export default function ExercisePage() {
         try {
           setLoading(true);
           const res = await listExercises({ limit: 50 });
-          if (!alive) return;
+          if (!alive) return; 
   
-          // mapeia DTO do back → tipo Exercise do catálogo
-          const mapped: Exercise[] = res.items.map((e: ExerciseDto) => ({
-            id: e._id,
-            name: e.name,
-            muscleGroup: e.muscleGroup ??  "",
-          }));
-  
-          setCatalog(mapped);
+          setCatalog(res.items);
         } catch (err: Error | unknown) {
           toast.error((err as Error)?.message ?? "Falha ao carregar exercícios");
         } finally {

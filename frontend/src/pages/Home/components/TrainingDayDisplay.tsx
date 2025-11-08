@@ -7,9 +7,9 @@ import {
   listMyTrainingDays,
   getTrainingDayById,
   listExercises,
-  type ExerciseDto,
   type TrainingDayLite,
 } from "../../../lib/api";
+import type { Exercise } from "../../../types/exercise";
 
 type SimpleRow = { name: string; muscleGroup?: string };
 
@@ -46,8 +46,8 @@ export default function TrainingDayDisplay() {
         if (mine.length > 0) setSelectedDayId(mine[0].id);
 
         const idx: Record<string, { name: string; muscleGroup?: string }> = {};
-        ex.items.forEach((e: ExerciseDto) => {
-          idx[e._id] = { name: e.name, muscleGroup: e.muscleGroup ?? "" };
+        ex.items.forEach((e: Exercise) => {
+          idx[e.id] = { name: e.name, muscleGroup: e.muscleGroup ?? "" };
         });
         setExIndex(idx);
       } catch (e: any) {

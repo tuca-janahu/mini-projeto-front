@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import ExerciseCatalog, { type Exercise } from "../../components/ExerciseCatalog";
-import { listExercises, type ExerciseDto } from "../../lib/api";
+import ExerciseCatalog from "../../components/ExerciseCatalog";
+import { deleteExercise, listExercises } from "../../lib/api";
 import { toast } from "react-toastify";
-
+import EditExerciseModal from "../../components/EditExercise";
+import type { Exercise } from "../../types/exercise";
 import TrainingDayDisplay from "./components/TrainingDayDisplay";
 import RecentSessions from "./components/RecentSessions";
 
@@ -14,6 +15,8 @@ export default function Home() {
   const [catalog, setCatalog] = useState<Exercise[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editing, setEditing] = useState<Exercise | null>(null);
 
   const today = new Date().toLocaleDateString();
   const quickActions = [
@@ -29,13 +32,7 @@ export default function Home() {
       try {
         setLoading(true);
         const res = await listExercises({ limit: 50 });
-        if (!alive) return;
-        const mapped: Exercise[] = res.items.map((e: ExerciseDto) => ({
-          id: e._id,
-          name: e.name,
-          muscleGroup: e.muscleGroup ?? "",
-        }));
-        setCatalog(mapped);
+        setCatalog(res.items);            // já é Exercise[]
         setNextCursor(res.nextCursor);
       } catch (err: any) {
         toast.error(err?.message ?? "Falha ao carregar exercícios");
@@ -43,7 +40,9 @@ export default function Home() {
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
 
   async function loadMore() {
@@ -51,18 +50,38 @@ export default function Home() {
     try {
       setLoading(true);
       const res = await listExercises({ limit: 10, cursor: nextCursor });
-      const mapped: Exercise[] = res.items.map((e: ExerciseDto) => ({
-        id: e._id,
-        name: e.name,
-        muscleGroup: e.muscleGroup ?? "",
-      }));
-      setCatalog((curr) => [...curr, ...mapped]);
+      setCatalog((curr) => [...curr, ...res.items]);
       setNextCursor(res.nextCursor);
     } catch (err: any) {
       toast.error(err?.message ?? "Falha ao carregar mais exercícios");
     } finally {
       setLoading(false);
     }
+  }
+
+  function openEdit(ex: Exercise) {
+    setEditing({
+      id: ex.id,
+      name: ex.name,
+      muscleGroup: ex.muscleGroup,
+      weightUnit: ex.weightUnit ?? "kg",
+    });
+    setEditOpen(true);
+  }
+
+  function onSaved(updated: Exercise) {
+    setCatalog((curr) =>
+      curr.map((c) =>
+        c.id === updated.id
+          ? {
+              ...c,
+              name: updated.name,
+              muscleGroup: updated.muscleGroup ?? "",
+              weightUnit: updated.weightUnit,
+            }
+          : c
+      )
+    );
   }
 
   return (
@@ -73,14 +92,16 @@ export default function Home() {
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ">
           <div>
             <p className="text-sm text-neutral-500">Hoje • {today}</p>
-            <h2 className="text-2xl font-bold tracking-tight">Bem-vindo de volta! Pronto para treinar?</h2>
+            <h2 className="text-2xl font-bold tracking-tight">
+              Bem-vindo de volta! Pronto para treinar?
+            </h2>
           </div>
           <div className="flex flex-wrap gap-2">
             {quickActions.map((a) => (
               <Link
                 key={a.label}
                 to={a.to}
-                className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-black hover:text-white transition-colors"
+                className="rounded-md border px-4 py-2 text-sm font-medium bg-white hover:bg-black hover:text-white transition-colors"
               >
                 {a.label}
               </Link>
@@ -97,17 +118,37 @@ export default function Home() {
 
           {/* Coluna direita (1/3) */}
           <div className="space-y-6">
-            <ExerciseCatalog catalog={catalog} selectedIds={[]} showAdd={false} />
-            {loading && <p className="text-sm text-neutral-500 mt-2">Carregando…</p>}
+            <ExerciseCatalog
+              catalog={catalog}
+              selectedIds={[]}
+              showAdd={false}
+               showEdit
+        onEdit={openEdit}
+            />
+             <EditExerciseModal
+        open={editOpen}
+        exercise={editing as Exercise}
+        onClose={() => setEditOpen(false)}
+        onSaved={onSaved}
+        onDeleted={deleteExercise}
+      />
+            {loading && (
+              <p className="text-sm text-neutral-500 mt-2">Carregando…</p>
+            )}
             {nextCursor && !loading && (
               <div className="mt-3">
-                <button onClick={loadMore} className="rounded-md border px-3 py-1.5 text-sm hover:bg-neutral-50">
+                <button
+                  onClick={loadMore}
+                  className="rounded-md border px-3 py-1.5 text-sm hover:bg-neutral-50"
+                >
                   Carregar mais
                 </button>
               </div>
             )}
             {catalog.length === 0 && !loading && (
-              <p className="text-sm text-neutral-500">Você ainda não criou exercícios.</p>
+              <p className="text-sm text-neutral-500">
+                Você ainda não criou exercícios.
+              </p>
             )}
           </div>
         </div>

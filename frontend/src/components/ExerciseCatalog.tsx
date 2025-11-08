@@ -2,19 +2,23 @@ import { useMemo, useState } from "react";
 import SelectBase from "./SelectBase";
 import Input from "./Input";
 import { muscleGroupOptions } from "../constants/options";
-//tipo mais simples pra essa página
-export type Exercise = { id: string; name: string; muscleGroup: string };
+import type { Exercise } from "../types/exercise";
+
 
 export default function ExerciseCatalog({
   catalog,
   onAdd,
   selectedIds = [],
   showAdd = true,
+  showEdit = false,
+  onEdit,
 }: {
   catalog: Exercise[];
   onAdd?: (ex: Exercise) => void;
   selectedIds?: string[];
   showAdd?: boolean;
+  showEdit?: boolean;
+  onEdit?: (ex: Exercise) => void;
 
 }) {
   const [query, setQuery] = useState("");
@@ -73,6 +77,12 @@ export default function ExerciseCatalog({
               >
                 {already ? "Adicionado" : "Adicionar"}
               </button>
+              )}
+
+              {showEdit && onEdit && (
+                <button onClick={() => onEdit(ex)} className="rounded-md border px-2 py-1 text-xs hover:bg-black hover:text-white cursor-pointer transition-all">
+                  Editar
+                </button>
               )}
             </li>
           );
