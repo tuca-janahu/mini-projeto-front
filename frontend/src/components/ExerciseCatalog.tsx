@@ -68,7 +68,7 @@ export default function ExerciseCatalog({
                 className={` rounded-md border px-3 py-1.5 text-sm ${
                   already
                     ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-black hover:text-white  cursor-pointer"
+                    : "hover:bg-black hover:text-white cursor-pointer"
                 }`}
               >
                 {already ? "Adicionado" : "Adicionar"}

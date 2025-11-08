@@ -234,7 +234,7 @@ export default function SessionPage() {
     <main>
       <Header />
       <div className="mx-auto max-w-6xl p-4">
-        <h1 className="text-2xl font-semibold mb-4">Nova sessão de treino</h1>
+        <h1 className="text-2xl font-semibold my-8">Nova sessão de treino</h1>
 
         <div className="grid gap-3 sm:grid-cols-3 mb-6">
           <div className="space-y-1 sm:col-span-1">
@@ -262,7 +262,7 @@ export default function SessionPage() {
             </div>
           
         </div>
-
+      <div className="min-h-[50vh]">
         {items.length === 0 ? (
           <p className="text-sm text-neutral-500">
             Nenhum exercício carregado para este dia.
@@ -289,11 +289,12 @@ export default function SessionPage() {
           <button
             onClick={handleSave}
             disabled={!canSave || saving}
-            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-black px-4 hover:bg-blue-600 cursor-pointer transition-colors py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             {saving ? "Salvando..." : "Salvar sessão"}
           </button>
         </div>
+      </div>
       </div>
       <Footer />
     </main>

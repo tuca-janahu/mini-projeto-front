@@ -114,11 +114,11 @@ export default function ExercisePage() {
             />
           </div>
           
-          <div className="py-8">
+          <div className="pt-8 flex justify-end">
             <button
               type="submit"
               disabled={!canSubmit}
-              className="mt-6 w-full bg-blue-600 text-white p-2 rounded cursor-pointer"
+              className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer"
             >
                 {loading ? "Salvando..." : "Salvar Exercício"}
             </button>

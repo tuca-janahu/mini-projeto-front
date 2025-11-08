@@ -106,7 +106,7 @@ export default function SetTable({
               <td className="text-right">
                 <button
                   onClick={() => onRemoveRow(s.tempId)}
-                  className="rounded-md border px-2 py-1 text-xs hover:bg-red-50 hover:border-red-300"
+                  className="rounded-md border px-2 py-1 text-xs hover:bg-red-200 cursor-pointer hover:border-red-300"
                 >
                   Remover
                 </button>

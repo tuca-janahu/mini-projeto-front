@@ -146,7 +146,7 @@ export default function DayPage() {
           
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2 min-h-110">
+        <div className="grid gap-6 lg:grid-cols-2 min-h-[50vh]">
           
             <ExerciseCatalog
               catalog={catalog}
@@ -170,7 +170,7 @@ export default function DayPage() {
           
 
           {/* Dia atual (apenas ordem) */}
-          <section className="rounded-2xl border-2 bg-white  border-gray-300 p-4">
+          <section className="rounded-xl border-2 bg-white  border-gray-300 p-4">
             <h2 className="text-lg font-semibold mb-3">Exercícios do dia</h2>
 
             {items.length === 0 ? (
@@ -194,7 +194,7 @@ export default function DayPage() {
                       <button
                         onClick={() => moveItem(it.tempId, -1)}
                         disabled={idx === 0}
-                        className="rounded-md border px-2 py-1 text-xs disabled:opacity-40"
+                        className="rounded-md border cursor-pointer px-2 py-1 text-xs disabled:opacity-40"
                         title="Mover para cima"
                       >
                         ↑
@@ -202,14 +202,14 @@ export default function DayPage() {
                       <button
                         onClick={() => moveItem(it.tempId, 1)}
                         disabled={idx === items.length - 1}
-                        className="rounded-md border px-2 py-1 text-xs disabled:opacity-40"
+                        className="rounded-md border cursor-pointer px-2 py-1 text-xs disabled:opacity-40"
                         title="Mover para baixo"
                       >
                         ↓
                       </button>
                       <button
                         onClick={() => removeItem(it.tempId)}
-                        className="rounded-md border px-2 py-1 text-xs hover:bg-red-50 hover:border-red-300"
+                        className="rounded-md border px-2 py-1 text-xs hover:bg-red-200 transition-all cursor-pointer hover:border-red-300"
                       >
                         Remover
                       </button>
@@ -222,14 +222,14 @@ export default function DayPage() {
             <div className="mt-4 flex items-center justify-between">
               <button
                 onClick={() => setItems([])}
-                className="rounded-md border px-3 py-2 text-sm hover:bg-neutral-50"
+                className="rounded-md border px-3 py-2 text-sm cursor-pointer hover:border-red-500 hover:text-white hover:bg-red-500 transition-colors"
                 disabled={items.length === 0}
               >
                 Limpar tudo
               </button>
               <button
                 onClick={handleSave}
-                className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer"
                 disabled={name.trim() === "" || items.length === 0}
               >
                 Salvar dia

@@ -25,7 +25,7 @@ export default function SessionExerciseCard({
       <div className="mb-2 flex items-center justify-between">
         <div className="font-medium">{name}</div>
         <button
-          className="rounded-md border px-2 py-1 text-xs hover:bg-neutral-50"
+          className="rounded-md border  px-2 py-1 text-xs cursor-pointer hover:bg-black hover:text-white transition-colors"
           onClick={() => onAddSet(exerciseId)}
         >
           + Adicionar set

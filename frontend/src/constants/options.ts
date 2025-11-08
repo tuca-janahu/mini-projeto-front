@@ -1,6 +1,7 @@
 import type { Option } from "../components/SelectBase";
 
 export const muscleGroupOptions: Option[] = [
+  { value: "", label: "Todos os grupos" },
   { value: "peito", label: "Peito" },
   { value: "costas", label: "Costas" },
   { value: "bíceps", label: "Bíceps" },
