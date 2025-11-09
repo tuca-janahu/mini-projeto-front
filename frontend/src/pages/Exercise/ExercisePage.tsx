@@ -70,8 +70,8 @@ export default function ExercisePage() {
   return (
     <main>
         <Header />
-        <div className=" grid lg:grid-cols-2 mt-10 mx-auto max-w-6xl p-4">
-      <section className="rounded-xl border-2 bg-white border-gray-300 p-4 mx-10 max-h-[80vh] ">
+        <div className="mx-auto max-w-6xl grid gap-6 lg:grid-cols-2 mt-10 px-4 sm:px-6 lg:px-8">
+      <section className="rounded-xl border-2 bg-white border-gray-300 p-4 min-w-0 md:mx-10 max-h-[80vh] ">
         <h1 className="text-3xl font-bold pt-8 text-center">Novo Exercício</h1>
         <h2 className="text-xl font-semibold py-4 text-center">
           Insira os dados do exercício abaixo
@@ -121,13 +121,15 @@ export default function ExercisePage() {
           
           
       </section>
-      <section className="w-full max-w-2xl">
+      <section className="w-full my-6 md:mt-0  min-w-0">
+        <div className="w-full overflow-x-auto">
           <ExerciseCatalog
               catalog={catalog}
               onAdd={() => {}}
               selectedIds={[]}
               showAdd={false}
             ></ExerciseCatalog>
+            </div>
           </section>
           </div>
         <Footer />

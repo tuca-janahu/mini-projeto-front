@@ -92,14 +92,14 @@ export default function TrainingDayDisplay() {
   }, [selectedDayId, exIndex]);
 
   return (
-    <div className={"rounded-xl border-2 border-gray-300 p-5 bg-white"}>
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold">Treino de hoje</h3>
-          <p className="text-sm text-neutral-600">{title}</p>
+    <div className="rounded-xl border-2 border-gray-300 p-5 bg-white">
+      <div className="mb-4 flex md:flex-row flex-col items-start justify-between gap-3 gap-2 md:gap-4 min-w-0">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base md:text-lg font-semibold truncate">Treino de hoje</h3>
+          <p className="text-sm text-neutral-600 truncate">{title}</p>
         </div>
 
-        <div className="w-56">
+        <div className="w-full md:w-56">
           <SelectBase
             id="home-day"
             value={selectedDayId}
@@ -112,7 +112,7 @@ export default function TrainingDayDisplay() {
 
         <Link
           to={selectedDayId ? `/training-sessions?day=${selectedDayId}` : "/training-sessions"}
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+          className="w-full md:w-auto inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
         >
           Iniciar treino
         </Link>

@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import { login as apiLogin } from "../../lib/api";
 import { useNavigate } from "react-router-dom";
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -28,7 +27,7 @@ export default function Login() {
 }
   return (
     <main>  
-      <section className="rounded-xl w-full max-w-2xl bg-white p-12 shadow-md mx-auto my-20">
+      <section className="md:rounded-xl w-full max-w-2xl h-100vh bg-white p-6 md:p-12 md:shadow-md mx-auto md:my-20">
        <div className="max-w-lg m-auto">
               <h1 className="text-3xl font-bold pt-8 ">FitTrack</h1>
         <p className="text-md text-gray-500 py-4">Seu App de registro de treinos</p>
@@ -44,7 +43,7 @@ export default function Login() {
           </div>
           <div className="py-8">
             <button type="submit" className="mt-6 w-full bg-blue-600 text-white p-2 rounded cursor-pointer">Entrar</button>
-          <Link to="/register" className="mt-6 w-full bg-white text-blue-600 border border-blue-600 p-2 rounded cursor-pointer">Cadastrar</Link>
+          <button onClick={() => navigate("/register")} className="mt-6 w-full bg-white text-blue-600 border border-blue-600 p-2 rounded cursor-pointer">Cadastrar</button>
           </div>
 
         </form>

@@ -34,16 +34,16 @@ export default function ExerciseCatalog({
   }, [catalog, query, muscle]);
 
   return (
-    <section className="rounded-xl border-2 bg-white border-gray-300 p-4">
+    <section className="rounded-xl border-2 bg-white border-gray-300  p-4 w-full min-w-0">
       <h2 className="text-lg font-semibold mb-3">Catálogo de exercícios</h2>
 
-      <div className="mb-3 flex gap-2">
+      <div className="mb-3 flex flex-col md:flex-row gap-2">
         <Input
           type="search"
           placeholder="Buscar por nome…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-1"
+          className="md:flex-1"
         />
         
         <SelectBase
@@ -52,7 +52,7 @@ export default function ExerciseCatalog({
           onChange={setMuscle}
           options={muscleGroupOptions}
           placeholder="Selecione o grupo muscular"
-          className={`flex-1 ${muscle === "" ? "text-gray-400" : "text-gray-900"}`}
+          className={`md:flex-1 ${muscle === "" ? "text-gray-400" : "text-gray-900"}`}
         />
       </div>
 

@@ -55,7 +55,7 @@ export default function Header() {
   }, [location.pathname]);
 
   return (
-    <header className="sticky top-0 z-10 bg-neutral-200/90 backdrop-blur">
+    <header className="sticky top-0 z-10 bg-neutral-200/90 backdrop-blur md:p-0 py-4 px-2">
       <div className="mx-auto max-w-7xl px-4  flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <GiWeightLiftingUp />
@@ -63,7 +63,7 @@ export default function Header() {
           <h1 className="text-xl font-semibold tracking-tight">FitTrack</h1>
         </div>
         <div className="ml-auto">
-          <nav className="hidden sm:flex gap-2 justify-end">
+          <nav className="hidden md:flex gap-2 justify-end">
             <NavItem to="/" label="Início" />
             <NavItem to="/exercises" label="Novo Exercício" />
             <NavItem to="/training-days" label="Novo Dia" />
@@ -72,9 +72,9 @@ export default function Header() {
           </nav>
 
           {open ? (
-          <FaXmark className="block sm:hidden" onClick={() => setOpen(!open)} />
+          <FaXmark className="block md:hidden" onClick={() => setOpen(!open)} />
         ) : (
-          <FaBars className="block sm:hidden" onClick={() => setOpen(!open)} />
+          <FaBars className="block md:hidden" onClick={() => setOpen(!open)} />
         )}
 
         {open && (

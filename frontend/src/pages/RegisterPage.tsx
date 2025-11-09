@@ -34,7 +34,7 @@ export default function Register() {
 
   return (
     <main>  
-      <section className="rounded-xl w-full max-w-2xl bg-white p-12 shadow-md mx-auto my-20">
+      <section className="md:rounded-xl w-full max-w-2xl h-100vh bg-white p-6 md:p-12 md:shadow-md mx-auto md:my-20">
             <div className="max-w-lg m-auto">
               <h1 className="text-3xl font-bold pt-8 ">FitTrack</h1>
         <p className="text-md text-gray-500 py-4">Seu App de registro de treinos</p>
