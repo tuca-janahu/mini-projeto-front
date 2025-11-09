@@ -21,3 +21,7 @@ npm run dev
 ## Links públicos:
 - https://fit-track.tucajanahu.app -- MongoDB
 - https://fit-track-pg.tucajanahu.app -- PostgreSQL
+
+## Domínios de backend:
+- https://registros-treinos.tucajanahu.app/ -- MongoDB
+- https://registros-treinos-pg.tucajanahu.app/ -- PostgreSQL
