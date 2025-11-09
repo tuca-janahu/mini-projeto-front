@@ -97,7 +97,7 @@ export default function SetTable({
                     onChangeRow(s.tempId, { unit: v as WeightUnit })
                   }
                   options={weightOptions}
-                  className="h-9 w-36"
+                  className="md:h-9 md:w-36 w-20"
                   disabled={unitDisabled}
                 />
               </td>
