@@ -19,5 +19,5 @@ npm run dev
 ```
 
 ## Links públicos:
-https://fit-track.tucajanahu.app -- MongoDB
-https://fit-track-pg.tucajanahu.app -- PostgreSQL
+- https://fit-track.tucajanahu.app -- MongoDB
+- https://fit-track-pg.tucajanahu.app -- PostgreSQL
