@@ -43,7 +43,7 @@ export default function TrainingDayDisplay() {
         if (!alive) return;
 
         setDays(mine);
-        if (mine.length > 0) setSelectedDayId(mine[0].id);
+        if (mine.length > 0) setSelectedDayId(String(mine[0].id));
 
         const idx: Record<string, { name: string; muscleGroup?: string }> = {};
         ex.items.forEach((e: Exercise) => {

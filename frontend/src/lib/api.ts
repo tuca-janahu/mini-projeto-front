@@ -144,7 +144,7 @@ export async function listExercises(params: {
   };
 }
 
-export async function updateExercise(id: string, patch: ExerciseUpdate): Promise<Exercise> {
+export async function updateExercise(id: string | number, patch: ExerciseUpdate): Promise<Exercise> {
   const res = await http<ExerciseDTO>(`/exercises/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -153,12 +153,12 @@ export async function updateExercise(id: string, patch: ExerciseUpdate): Promise
   return fromDto(res);
 }
 
-export async function getExercise(id: string): Promise<Exercise> {
+export async function getExercise(id: string | number): Promise<Exercise> {
   const res = await http<ExerciseDTO>(`/exercises/${id}`, { method: "GET" });
   return fromDto(res);
 }
 
-export async function deleteExercise(id: string): Promise<void> {
+export async function deleteExercise(id: string | number): Promise<void> {
   await http<void>(`/exercises/${id}`, { method: "DELETE" });
 }
 /* =========================
@@ -169,7 +169,7 @@ export type TrainingDayItemInput = { exerciseId: string; order: number };
 
 export async function createTrainingDay(payload: {
   name: string; // vindo do formulário
-  items: Array<{ exerciseId: string; order: number }>;
+  items: Array<{ exerciseId: string | number; order: number }>;
 }) {
   const body = {
     label: payload.name,                // <- controller usa "label"
@@ -179,13 +179,13 @@ export async function createTrainingDay(payload: {
     })),
   };
 
-  return http<{ id: string }>(`/training-days`, {
+  return http<{ id: string | number }>(`/training-days`, {
     method: "POST",
     body: JSON.stringify(body),
   });
 }
 
-export type TrainingDayDto = { id: string; label: string };
+export type TrainingDayDto = { id: string | number; label: string };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapDay(raw: any): TrainingDayDto {
@@ -206,7 +206,7 @@ export type TrainingDayDetail = {
   items: { exerciseId: string; order: number }[];
 };
 
-export async function getTrainingDayById(id: string): Promise<TrainingDayDetail> {
+export async function getTrainingDayById(id: string | number): Promise<TrainingDayDetail> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await http<any>(`/training-days/${encodeURIComponent(id)}`);
   const items =
@@ -226,15 +226,15 @@ export async function getTrainingDayById(id: string): Promise<TrainingDayDetail>
 }
 
 const dayNameCache = new Map<string, string>();
-export async function getTrainingDayName(id: string): Promise<string> {
-  const hit = dayNameCache.get(id);
+export async function getTrainingDayName(id: string | number): Promise<string> {
+  const hit = dayNameCache.get(String(id));
   if (hit) return hit;
   const day = await getTrainingDayById(id);
-  dayNameCache.set(id, day.label);
+  dayNameCache.set(String(id), day.label);
   return day.label;
 }
 
-export type TrainingDayLite = { id: string; label: string;  exercises?: { name?: string }[] };
+export type TrainingDayLite = { id: string | number; label: string;  exercises?: { name?: string }[] };
 
 export async function listMyTrainingDays() {
   // ajuste a rota (se usar ?mine=true ou já filtra por token)
@@ -260,9 +260,9 @@ export type SessionSetInput = {
 };
 
 type DraftPayload = {
-  trainingDayId: string;
+  trainingDayId: string | number;
   items: Array<{
-    exerciseId: string;
+    exerciseId: string | number;
     sets: Array<{ reps: number | null | ""; load: number | null | ""; unit: "kg"|"stack"|"bodyweight" }>;
   }>;
   notes?: string;
@@ -270,8 +270,8 @@ type DraftPayload = {
 };
 
 type ListSessionsFilters = {
-  trainingDayId?: string;
-  exerciseId?: string;
+  trainingDayId?: string | number;
+  exerciseId?: string | number;
   from?: string; // ISO (ex.: "2025-11-01") ou "2025-11-01T00:00:00Z"
   to?: string;   // ISO
   page?: number;
@@ -318,8 +318,8 @@ export async function createTrainingSession(draft: DraftPayload) {
 
 export async function listTrainingSessions(filters: ListSessionsFilters = {}) {
   const qs = new URLSearchParams();
-  if (filters.trainingDayId) qs.set("trainingDayId", filters.trainingDayId);
-  if (filters.exerciseId) qs.set("exerciseId", filters.exerciseId);
+  if (filters.trainingDayId) qs.set("trainingDayId", String(filters.trainingDayId));
+  if (filters.exerciseId) qs.set("exerciseId", String(filters.exerciseId));
   if (filters.from) qs.set("from", filters.from);
   if (filters.to) qs.set("to", filters.to);
   if (filters.page) qs.set("page", String(filters.page));
