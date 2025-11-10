@@ -144,7 +144,7 @@ export async function listExercises(params: {
   };
 }
 
-export async function updateExercise(id: string | number, patch: ExerciseUpdate): Promise<Exercise> {
+export async function updateExercise(id: string, patch: ExerciseUpdate): Promise<Exercise> {
   const res = await http<ExerciseDTO>(`/exercises/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -153,12 +153,12 @@ export async function updateExercise(id: string | number, patch: ExerciseUpdate)
   return fromDto(res);
 }
 
-export async function getExercise(id: string | number): Promise<Exercise> {
+export async function getExercise(id: string): Promise<Exercise> {
   const res = await http<ExerciseDTO>(`/exercises/${id}`, { method: "GET" });
   return fromDto(res);
 }
 
-export async function deleteExercise(id: string | number): Promise<void> {
+export async function deleteExercise(id: string): Promise<void> {
   await http<void>(`/exercises/${id}`, { method: "DELETE" });
 }
 /* =========================
@@ -169,7 +169,7 @@ export type TrainingDayItemInput = { exerciseId: string; order: number };
 
 export async function createTrainingDay(payload: {
   name: string; // vindo do formulário
-  items: Array<{ exerciseId: string | number; order: number }>;
+  items: Array<{ exerciseId: string; order: number }>;
 }) {
   const body = {
     label: payload.name,                // <- controller usa "label"
@@ -179,13 +179,13 @@ export async function createTrainingDay(payload: {
     })),
   };
 
-  return http<{ id: string | number }>(`/training-days`, {
+  return http<{ id: string }>(`/training-days`, {
     method: "POST",
     body: JSON.stringify(body),
   });
 }
 
-export type TrainingDayDto = { id: string | number; label: string };
+export type TrainingDayDto = { id: string; label: string };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapDay(raw: any): TrainingDayDto {
@@ -206,7 +206,7 @@ export type TrainingDayDetail = {
   items: { exerciseId: string; order: number }[];
 };
 
-export async function getTrainingDayById(id: string | number): Promise<TrainingDayDetail> {
+export async function getTrainingDayById(id: string): Promise<TrainingDayDetail> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await http<any>(`/training-days/${encodeURIComponent(id)}`);
   const items =
@@ -226,7 +226,7 @@ export async function getTrainingDayById(id: string | number): Promise<TrainingD
 }
 
 const dayNameCache = new Map<string, string>();
-export async function getTrainingDayName(id: string | number): Promise<string> {
+export async function getTrainingDayName(id: string): Promise<string> {
   const hit = dayNameCache.get(String(id));
   if (hit) return hit;
   const day = await getTrainingDayById(id);
@@ -234,7 +234,7 @@ export async function getTrainingDayName(id: string | number): Promise<string> {
   return day.label;
 }
 
-export type TrainingDayLite = { id: string | number; label: string;  exercises?: { name?: string }[] };
+export type TrainingDayLite = { id: string; label: string;  exercises?: { name?: string }[] };
 
 export async function listMyTrainingDays() {
   // ajuste a rota (se usar ?mine=true ou já filtra por token)
@@ -260,9 +260,9 @@ export type SessionSetInput = {
 };
 
 type DraftPayload = {
-  trainingDayId: string | number;
+  trainingDayId: string;
   items: Array<{
-    exerciseId: string | number;
+    exerciseId: string;
     sets: Array<{ reps: number | null | ""; load: number | null | ""; unit: "kg"|"stack"|"bodyweight" }>;
   }>;
   notes?: string;
@@ -270,8 +270,8 @@ type DraftPayload = {
 };
 
 type ListSessionsFilters = {
-  trainingDayId?: string | number;
-  exerciseId?: string | number;
+  trainingDayId?: string;
+  exerciseId?: string;
   from?: string; // ISO (ex.: "2025-11-01") ou "2025-11-01T00:00:00Z"
   to?: string;   // ISO
   page?: number;

@@ -1,11 +1,11 @@
 import type { SelectHTMLAttributes } from "react";
 import { cn } from "../lib/utils";
 
-export type Option = { value: string | number; label: string };
+export type Option = { value: string; label: string };
 
 type Props = Omit<SelectHTMLAttributes<HTMLSelectElement>, "onChange" | "children"> & {
   id: string;
-  value: string | number;
+  value: string;
   onChange: (v: string) => void;
   options: Option[];
   placeholder?: string;
